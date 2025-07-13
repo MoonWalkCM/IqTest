@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест на IQ с вопросами по Minecraft</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+                url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADUSURBVHhe7dEBCQAACMJb7L/3nqEgAwMDoP4AAMQAAADEAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAACAGAAAgBgAAIAYAADgD/wMAnQ5zL4jYAAAAAElFTkSuQmCC');
+            background-size: 100px, 100px;
+            background-position: 0 0, 0 0;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+                radial-gradient(circle, rgba(255, 255, 255, 0.6) 1px, transparent 1px);
+            background-size: 50px 50px, 30px 30px;
+            background-position: 0 0, 15px 15px;
+            animation: twinkle 3s ease-in-out infinite;
+            z-index: -1;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        .minecraft-btn {
+            background-color: #4CAF50;
+            border: 2px solid #3d8b40;
+            padding: 12px 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            border-radius: 4px;
+        }
+        .minecraft-btn:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .correct-answer {
+            background-color: #16a34a !important;
+        }
+        .question-card, .role-card {
+            background-color: rgba(60, 60, 60, 0.9);
+            border: 3px solid #555;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .progress-bar {
+            background-color: #555;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background-color: #4CAF50;
+            height: 20px;
+            transition: width 0.3s ease-in-out;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: underline;
+        }
+        a:hover {
+            color: #45a049;
+        }
+        .highlight {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .emoji {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+    <div id="registration" class="w-full max-w-md p-6">
+        <h1 class="text-2xl text-center mb-6">Регистрация для теста на IQ</h1>
+        <input id="username" type="text" placeholder="Введите ваш ник в игре" class="w-full p-3 mb-4 bg-gray-800 text-white border border-gray-600 rounded">
+        <input id="discord-username" type="text" placeholder="Введите ваш ник в Discord" class="w-full p-3 mb-4 bg-gray-800 text-white border border-gray-600 rounded">
+        <button onclick="register()" class="minecraft-btn w-full">Зарегистрироваться</button>
+    </div>
+
+    <div id="test" class="w-full max-w-3xl p-6 hidden">
+        <h1 class="text-2xl text-center mb-6">Тест на IQ</h1>
+        <div class="progress-bar mb-4">
+            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div id="question-container"></div>
+        <button onclick="nextQuestion()" class="minecraft-btn mt-4">Следующий вопрос</button>
+        <p id="progress" class="mt-4 text-sm"></p>
+    </div>
+
+    <div id="results" class="w-full max-w-4xl p-6 hidden flex">
+        <div class="w-2/3 pr-4">
+            <h1 class="text-2xl text-center mb-6">Результаты теста</h1>
+            <p id="result-text" class="text-lg mb-4"></p>
+            <button id="action-button" class="minecraft-btn mt-4">Вернуться к регистрации</button>
+        </div>
+        <div id="role-tutorial" class="w-1/3 ml-4 hidden">
+            <div class="role-card">
+                <h2 class="text-xl text-center mb-4">🎮 Как получить роль</h2>
+                <p class="text-sm mb-4">Поздравляем с успешным прохождением теста! Чтобы получить вашу заслуженную роль, следуйте этим шагам:</p>
+                <ol class="list-decimal list-inside text-xs mb-4">
+                    <li><span class="emoji">🔗</span>Зайдите на Discord-сервер: <a href="https://discord.gg/T3x8c58sVS" target="_blank" class="highlight">https://discord.gg/T3x8c58sVS</a></li>
+                    <li><span class="emoji">✅</span>Пройдите <span class="highlight">верификацию</span> на сервере.</li>
+                    <li><span class="emoji">📨</span>Перейдите в канал <span class="highlight">「📨」тикет</span>.</li>
+                    <li><span class="emoji">🟢</span>Нажмите на зеленую кнопку <span class="highlight">Создать</span>.</li>
+                    <li><span class="emoji">📸</span>В канал тикета отправьте <span class="highlight">скриншот</span> этой страницы или укажите ваш Discord-ник: <span class="highlight" id="discord-username-display"></span>.</li>
+                </ol>
+                <p class="text-xs">Убедитесь, что ваш Discord-ник совпадает: <span class="highlight" id="discord-username-confirm"></span>.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let username = '';
+        let discordUsername = '';
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = [];
+
+        const questions = [
+            // General IQ Questions (18)
+            { question: "Какое число следует далее: 1, 3, 7, 15, 31, ?", options: ["47", "63", "61", "59"], answer: 1 }, // 63 (2n + 1)
+            { question: "Если 3x + 5y = 29 и x + y = 7, чему равно x?", options: ["2", "3", "4", "5"], answer: 2 }, // 4
+            { question: "Какой символ завершает последовательность: A, D, I, I, ?, I", options: ["A", "C", "I", "K"], answer: 0 }, // A
+            { question: "Если 4 человека строят дом за 12 дней, сколько дней нужно 6 людям?", options: ["8", "9", "10", "11"], answer: 0 }, // 8
+            { question: "Что следует далее: 2, 6, 12, 20, 30, ?", options: ["40", "42", "44", "46"], answer: 2 }, // 44 (n² + n)
+            { question: "Какое число отсутствует: 1, 4, 10, 22, ?, 46", options: ["28", "30", "32", "34"], answer: 2 }, // 32
+            { question: "Если A = 1, B = 2, ..., Z = 26, чему равно значение слова 'КОТ'?", options: ["30", "32", "34", "36"], answer: 0 }, // 30 (11+15+4)
+            { question: "Какой элемент не подходит: 16, 25, 36, 49, 60?", options: ["16", "25", "36", "49", "60"], answer: 4 }, // 60 (не квадрат)
+            { question: "Если 5x - 2y = 13 и x + y = 5, чему равно y?", options: ["1", "2", "3", "4"], answer: 1 }, // 2
+            { question: "Что следует далее: 1, 2, 4, 8, 16, ?", options: ["24", "28", "32", "36"], answer: 2 }, // 32
+            { question: "Какое слово не подходит: Большой, Маленький, Высокий, Короткий?", options: ["Большой", "Маленький", "Высокий", "Короткий"], answer: 0 }, // Большой
+            { question: "Если 7 рабочих красят дом за 14 дней, сколько дней нужно 4 рабочим?", options: ["22", "24", "25", "26"], answer: 0 }, // 22
+            { question: "Что следует далее: 3, 9, 18, 30, 48, ?", options: ["60", "66", "72", "78"], answer: 2 }, // 72
+            { question: "Какое число отсутствует: 2, 6, 12, 20, ?, 42", options: ["28", "30", "32", "34"], answer: 0 }, // 28
+            { question: "Если 2x + 3y = 17 и x - y = 1, чему равно x?", options: ["4", "5", "6", "7"], answer: 1 }, // 5
+            { question: "Какой фигура завершает: Круг, Квадрат, Треугольник, Круг, Квадрат, ?", options: ["Круг", "Квадрат", "Треугольник", "Пятиугольник"], answer: 2 }, // Треугольник
+            { question: "Чему равно 15% от 240?", options: ["30", "36", "40", "42"], answer: 1 }, // 36
+            { question: "Что следует далее: 1, 4, 10, 22, 46, ?", options: ["82", "94", "100", "106"], answer: 1 }, // 94
+
+            // Minecraft Cheat-Related Questions (52)
+            { question: "Что показывает чит X-ray в Minecraft 1.8.9?", options: ["Местоположение игроков", "Скрытые руды", "Здоровье мобов", "Рецепты крафта"], answer: 1 }, // Скрытые руды
+            { question: "Какой чит позволяет автоматически атаковать ближайших мобов в 1.8.9?", options: ["Fly hack", "KillAura", "Speed hack", "No clip"], answer: 1 }, // KillAura
+            { question: "Какое последствие использования читов на сервере Minecraft 1.8.9?", options: ["Дополнительный опыт", "Бан на сервере", "Лучшая добыча", "Быстрый крафт"], answer: 1 }, // Бан на сервере
+            { question: "Какая команда Minecraft может имитировать чит в 1.8.9?", options: ["/give", "/time set", "/weather clear", "/gamemode"], answer: 3 }, // /gamemode
+            { question: "Что позволяет делать чит 'No clip' в Minecraft 1.8.9?", options: ["Проходить сквозь стены", "Бесконечное здоровье", "Автоматическая добыча", "Телепортация"], answer: 0 }, // Проходить сквозь стены
+            { question: "Какой чит помогает быстрее находить алмазы в 1.8.9?", options: ["KillAura", "X-ray", "Auto-clicker", "Fly hack"], answer: 1 }, // X-ray
+            { question: "Для чего используется чит 'Auto-clicker' в 1.8.9?", options: ["Автоматический крафт", "Быстрое нажатие", "Невидимость", "Спавн мобов"], answer: 1 }, // Быстрое нажатие
+            { question: "Какая система анти-читов популярна на серверах 1.8.9?", options: ["CreeperGuard", "NoCheatPlus", "AntiHack", "BlockBuster"], answer: 1 }, // NoCheatPlus
+            { question: "Что позволяет делать чит 'Fly hack' в 1.8.9?", options: ["Летать в режиме выживания", "Бегать быстрее", "Автоматический прыжок", "Невидимость"], answer: 0 }, // Летать в режиме выживания
+            { question: "Почему читы, такие как X-ray, осуждаются в 1.8.9?", options: ["Они крашат сервер", "Они дают несправедливое преимущество", "Они удаляют миры", "Они замедляют игру"], answer: 1 }, // Они дают несправедливое преимущество
+            { question: "Какой чит обходит анти-читы путем изменения пакетов в 1.8.9?", options: ["Packet spoofing", "KillAura", "Speed hack", "Auto-aim"], answer: 0 }, // Packet spoofing
+            { question: "Что делает чит 'Jesus hack' в Minecraft 1.8.9?", options: ["Ходить по воде", "Бесконечная еда", "Автоматическая рыбалка", "Быстрое плавание"], answer: 0 }, // Ходить по воде
+            { question: "Какой чит позволяет видеть игроков через стены в 1.8.9?", options: ["X-ray", "ESP", "KillAura", "Auto-aim"], answer: 1 }, // ESP
+            { question: "Что делает чит 'Triggerbot' в PvP на 1.8.9?", options: ["Автоматический выстрел из лука", "Автоматическая атака при наведении", "Увеличение урона", "Бесконечные стрелы"], answer: 1 }, // Автоматическая атака при наведении
+            { question: "Какой анти-чит отслеживает подозрительные движения в 1.8.9?", options: ["Watchdog", "CreeperGuard", "BlockBuster", "AntiAura"], answer: 0 }, // Watchdog
+            { question: "Что делает чит 'Aimbot' в 1.8.9?", options: ["Автоматическое прицеливание", "Ускорение бега", "Автоматический крафт", "Невидимость"], answer: 0 }, // Автоматическое прицеливание
+            { question: "Какой чит изменяет скорость передвижения в 1.8.9?", options: ["Fly hack", "Speed hack", "No clip", "Jesus hack"], answer: 1 }, // Speed hack
+            { question: "Что может выявить анти-чит в 1.8.9, анализируя пакеты?", options: ["Необычное движение", "Изменение погоды", "Крафт предметов", "Чат-сообщения"], answer: 0 }, // Необычное движение
+            { question: "Какой чит позволяет автоматически строить в 1.8.9?", options: ["Auto-build", "X-ray", "KillAura", "Speed hack"], answer: 0 }, // Auto-build
+            { question: "Почему чит 'KillAura' трудно обнаружить в 1.8.9?", options: ["Мимикрирует под легитимную игру", "Работает только в одиночной игре", "Не отправляет пакеты", "Меняет текстуры"], answer: 0 }, // Мимикрирует под легитимную игру
+            { question: "Какой чит подделывает местоположение игрока в 1.8.9?", options: ["Teleport hack", "Fly hack", "Auto-clicker", "ESP"], answer: 0 }, // Teleport hack
+            { question: "Что делает чит 'Chest ESP' в 1.8.9?", options: ["Показывает сундуки через стены", "Автоматически открывает сундуки", "Увеличивает инвентарь", "Сортирует сундуки"], answer: 0 }, // Показывает сундуки через стены
+            { question: "Какой чит в 1.8.9 снижает отдачу при ударах?", options: ["NoKnockback", "KillAura", "Speed hack", "Auto-aim"], answer: 0 }, // NoKnockback
+            { question: "Что делает чит 'Scaffold' в 1.8.9?", options: ["Автоматическая установка блоков", "Ускорение строительства", "Невидимость блоков", "Разрушение блоков"], answer: 0 }, // Автоматическая установка блоков
+            { question: "Какой метод обхода NoCheatPlus популярен в 1.8.9?", options: ["Timer manipulation", "Block glitching", "Inventory spoofing", "Chat flooding"], answer: 0 }, // Timer manipulation
+            { question: "Что проверяет анти-чит AAC в 1.8.9?", options: ["Скорость атаки", "Размер инвентаря", "Текстуры игры", "Чат-сообщения"], answer: 0 }, // Скорость атаки
+            { question: "Какой чит в 1.8.9 позволяет стрелять из лука быстрее?", options: ["BowAimbot", "FastBow", "Auto-aim", "Triggerbot"], answer: 1 }, // FastBow
+            { question: "Что делает чит 'Blink' в 1.8.9?", options: ["Фиктивное отставание", "Невидимость", "Быстрое перемещение", "Автоматическая атака"], answer: 0 }, // Фиктивное отставание
+            { question: "Какой анти-чит в 1.8.9 анализирует углы прицеливания?", options: ["NoCheatPlus", "Watchdog", "AAC", "Spartan"], answer: 3 }, // Spartan
+            { question: "Что делает чит 'Criticals' в 1.8.9?", options: ["Автоматические критические удары", "Увеличение урона", "Бесконечное здоровье", "Быстрая регенерация"], answer: 0 }, // Автоматические критические удары
+            { question: "Какой метод обхода анти-читов в 1.8.9 использует пакеты?", options: ["Packet cancelling", "Timer spoofing", "Block glitching", "Inventory hacking"], answer: 0 }, // Packet cancelling
+            { question: "Что делает чит 'Reach' в 1.8.9?", options: ["Увеличивает дальность удара", "Ускоряет бег", "Дает невидимость", "Автоматически целится"], answer: 0 }, // Увеличивает дальность удара
+            { question: "Какой анти-чит в 1.8.9 отслеживает скорость размещения блоков?", options: ["NoCheatPlus", "AAC", "Watchdog", "Spartan"], answer: 1 }, // AAC
+            { question: "Что делает чит 'Velocity' в 1.8.9?", options: ["Уменьшает отдачу от ударов", "Увеличивает скорость", "Дает полет", "Показывает мобов"], answer: 0 }, // Уменьшает отдачу от ударов
+            { question: "Какой чит в 1.8.9 позволяет обойти проверку движения?", options: ["Phase", "Speed hack", "KillAura", "Auto-clicker"], answer: 0 }, // Phase
+            { question: "Что проверяет анти-чит Watchdog в 1.8.9?", options: ["Скорость передвижения", "Размер инвентаря", "Текстуры блоков", "Чат"], answer: 0 }, // Скорость передвижения
+            { question: "Какой чит в 1.8.9 автоматически прыгает?", options: ["AutoJump", "Bhop", "Fly hack", "Speed hack"], answer: 1 }, // Bhop
+            { question: "Что делает чит 'Nuker' в 1.8.9?", options: ["Разрушает блоки вокруг", "Строит блоки", "Показывает руды", "Ускоряет крафт"], answer: 0 }, // Разрушает блоки вокруг
+            { question: "Какой метод обхода в 1.8.9 изменяет таймер клиента?", options: ["Timer hack", "Speed hack", "Phase", "No clip"], answer: 0 }, // Timer hack
+            { question: "Что делает чит 'Hitbox' в 1.8.9?", options: ["Увеличивает зону поражения", "Уменьшает урон", "Дает невидимость", "Ускоряет атаку"], answer: 0 }, // Увеличивает зону поражения
+            { question: "Какой анти-чит в 1.8.9 проверяет частоту кликов?", options: ["NoCheatPlus", "AAC", "Watchdog", "Spartan"], answer: 1 }, // AAC
+            { question: "Что делает чит 'AntiKnockback' в 1.8.9?", options: ["Устраняет отдачу", "Увеличивает урон", "Дает полет", "Показывает игроков"], answer: 0 }, // Устраняет отдачу
+            { question: "Какой чит в 1.8.9 имитирует легитимные движения?", options: ["SmoothAim", "Aimbot", "KillAura", "Triggerbot"], answer: 0 }, // SmoothAim
+            { question: "Что делает чит 'Freecam' в 1.8.9?", options: ["Свободное перемещение камеры", "Невидимость", "Быстрая атака", "Авто-строительство"], answer: 0 }, // Свободное перемещение камеры
+            { question: "Какой метод обхода в 1.8.9 использует поддельные пакеты?", options: ["Spoofer", "Timer hack", "Phase", "No clip"], answer: 0 }, // Spoofer
+            { question: "Что делает чит 'AutoSoup' в 1.8.9?", options: ["Автоматически ест суп", "Ускоряет регенерацию", "Дает бесконечную еду", "Увеличивает урон"], answer: 0 }, // Автоматически ест суп
+            { question: "Какой анти-чит в 1.8.9 проверяет последовательность действий?", options: ["NoCheatPlus", "AAC", "Watchdog", "Spartan"], answer: 0 }, // NoCheatPlus
+            { question: "Что делает чит 'Step' в 1.8.9?", options: ["Автоматический подъем на блоки", "Ускоряет бег", "Дает полет", "Показывает мобов"], answer: 0 }, // Автоматический подъем на блоки
+            { question: "Какой чит в 1.8.9 обходит проверку прыжков?", options: ["Jesus hack", "Bhop", "Fly hack", "Speed hack"], answer: 1 }, // Bhop
+            { question: "Что делает чит 'AutoTool' в 1.8.9?", options: ["Автоматически выбирает инструмент", "Ускоряет добычу", "Показывает руды", "Строит структуры"], answer: 0 }, // Автоматически выбирает инструмент
+            { question: "Какой метод обхода в 1.8.9 снижает отправку пакетов?", options: ["Packet limiter", "Timer hack", "Phase", "Spoofer"], answer: 0 }, // Packet limiter
+
+            // New Question (1)
+            { question: "Сосал? Да/Нет", options: ["Да", "Нет"], answer: 1 } // Нет
+        ];
+
+        function register() {
+            username = document.getElementById('username').value.trim();
+            discordUsername = document.getElementById('discord-username').value.trim();
+            if (username && discordUsername) {
+                localStorage.setItem('username', username);
+                localStorage.setItem('discordUsername', discordUsername);
+                document.getElementById('registration').classList.add('hidden');
+                document.getElementById('test').classList.remove('hidden');
+                showQuestion();
+            } else {
+                alert('Пожалуйста, заполните оба поля: ник в игре и ник в Discord!');
+            }
+        }
+
+        function showQuestion() {
+            const container = document.getElementById('question-container');
+            const question = questions[currentQuestion];
+            const isSpecialUser = username === 'MwXHvH';
+            container.innerHTML = `
+                <div class="question-card">
+                    <h2 class="text-lg mb-4">${currentQuestion + 1}. ${question.question}</h2>
+                    ${question.options.map((option, index) => `
+                        <button onclick="selectAnswer(${index})" class="minecraft-btn w-full mb-2 ${isSpecialUser && index === question.answer ? 'correct-answer' : ''}">${option}</button>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('progress').textContent = `Вопрос ${currentQuestion + 1} из ${questions.length}`;
+            const progressFill = document.getElementById('progress-fill');
+            progressFill.style.width = `${(currentQuestion + 1) / questions.length * 100}%`;
+        }
+
+        function selectAnswer(index) {
+            userAnswers[currentQuestion] = index;
+            if (index === questions[currentQuestion].answer) {
+                score += 1; // 1 point per correct answer
+            }
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        async function showResults() {
+            document.getElementById('test').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+            const resultText = document.getElementById('result-text');
+            const actionButton = document.getElementById('action-button');
+            const roleTutorial = document.getElementById('role-tutorial');
+            username = localStorage.getItem('username') || 'Игрок';
+            discordUsername = localStorage.getItem('discordUsername') || 'Неизвестно';
+
+            // Scoring System
+            let role;
+            if (score >= 60) {
+                role = "Умный";
+            } else if (score >= 50) {
+                role = "Почти дебил";
+            } else if (score >= 40) {
+                role = "Норм";
+            } else if (score >= 30) {
+                role = "Даун";
+            } else if (score >= 20) {
+                role = "Слабоумный";
+            } else if (score >= 10) {
+                role = "Отсталый";
+            } else {
+                role = "12-летка";
+            }
+
+            // Show role tutorial for scores >= 40
+            if (score >= 40) {
+                roleTutorial.classList.remove('hidden');
+                document.getElementById('discord-username-display').textContent = discordUsername;
+                document.getElementById('discord-username-confirm').textContent = discordUsername;
+            } else {
+                roleTutorial.classList.add('hidden');
+            }
+
+            // Set button action
+            actionButton.textContent = score >= 40 ? "Вернуться к регистрации" : "Пройти тест заново";
+            actionButton.onclick = restartTest;
+
+            // Display result
+            resultText.textContent = `Поздравляем, ${username}! Ваш результат: ${score} из ${questions.length}. Роль: ${role}. Discord-ник: ${discordUsername}.`;
+
+            // Send result to Telegram
+            const telegramBotToken = '7590381019:AAGdr6Dge5B-boqR1ko8sUkoP5YpzurUNRs';
+            const telegramChatId = '8082085782';
+            const message = `Ник в игре: ${username}\nDiscord-ник: ${discordUsername}\nРезультат: ${score} из ${questions.length}\nРоль: ${role}`;
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: telegramChatId,
+                        text: message
+                    })
+                });
+                if (!response.ok) {
+                    console.error('Ошибка отправки в Telegram:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Ошибка сети при отправке в Telegram:', error);
+            }
+        }
+
+        function restartTest() {
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('registration').classList.remove('hidden');
+            document.getElementById('username').value = localStorage.getItem('username') || '';
+            document.getElementById('discord-username').value = localStorage.getItem('discordUsername') || '';
+        }
+
+        // Pre-fill username and discord username inputs if they exist
+        window.onload = function() {
+            const storedUsername = localStorage.getItem('username');
+            const storedDiscordUsername = localStorage.getItem('discordUsername');
+            if (storedUsername) {
+                document.getElementById('username').value = storedUsername;
+            }
+            if (storedDiscordUsername) {
+                document.getElementById('discord-username').value = storedDiscordUsername;
+            }
+            // Ensure registration panel is shown on load
+            document.getElementById('registration').classList.remove('hidden');
+            document.getElementById('test').classList.add('hidden');
+            document.getElementById('results').classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
