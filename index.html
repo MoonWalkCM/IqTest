@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тест на IQ с вопросами по Minecraft</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         body {
@@ -96,7 +97,10 @@
         <h1 class="text-2xl text-center mb-6">Регистрация для теста на IQ</h1>
         <input id="username" type="text" placeholder="Введите ваш ник в игре" class="w-full p-3 mb-4 bg-gray-800 text-white border border-gray-600 rounded">
         <input id="discord-username" type="text" placeholder="Введите ваш ник в Discord" class="w-full p-3 mb-4 bg-gray-800 text-white border border-gray-600 rounded">
-        <button onclick="register()" class="minecraft-btn w-full">Зарегистрироваться</button>
+        <div class="flex space-x-4">
+            <button onclick="register('full')" class="minecraft-btn w-full">Полный тест</button>
+            <button onclick="register('short')" class="minecraft-btn w-full">Короткий тест</button>
+        </div>
     </div>
 
     <div id="test" class="w-full max-w-3xl p-6 hidden">
@@ -137,6 +141,7 @@
         let currentQuestion = 0;
         let score = 0;
         let userAnswers = [];
+        let isShortTest = false;
 
         const questions = [
             // General IQ Questions (18)
@@ -164,14 +169,14 @@
             { question: "Какой чит позволяет автоматически атаковать ближайших мобов в 1.8.9?", options: ["Fly hack", "KillAura", "Speed hack", "No clip"], answer: 1 }, // KillAura
             { question: "Какое последствие использования читов на сервере Minecraft 1.8.9?", options: ["Дополнительный опыт", "Бан на сервере", "Лучшая добыча", "Быстрый крафт"], answer: 1 }, // Бан на сервере
             { question: "Какая команда Minecraft может имитировать чит в 1.8.9?", options: ["/give", "/time set", "/weather clear", "/gamemode"], answer: 3 }, // /gamemode
-            { question: "Что позволяет делать чит 'No clip' в Minecraft 1.8.9?", options: ["Проходить сквозь стены", "Бесконечное здоровье", "Автоматическая добыча", "Телепортация"], answer: 0 }, // Проходить сквозь стены
+            { question: "Что позволяет делать чит 'No clip' в 1.8.9?", options: ["Проходить сквозь стены", "Бесконечное здоровье", "Автоматическая добыча", "Телепортация"], answer: 0 }, // Проходить сквозь стены
             { question: "Какой чит помогает быстрее находить алмазы в 1.8.9?", options: ["KillAura", "X-ray", "Auto-clicker", "Fly hack"], answer: 1 }, // X-ray
             { question: "Для чего используется чит 'Auto-clicker' в 1.8.9?", options: ["Автоматический крафт", "Быстрое нажатие", "Невидимость", "Спавн мобов"], answer: 1 }, // Быстрое нажатие
             { question: "Какая система анти-читов популярна на серверах 1.8.9?", options: ["CreeperGuard", "NoCheatPlus", "AntiHack", "BlockBuster"], answer: 1 }, // NoCheatPlus
             { question: "Что позволяет делать чит 'Fly hack' в 1.8.9?", options: ["Летать в режиме выживания", "Бегать быстрее", "Автоматический прыжок", "Невидимость"], answer: 0 }, // Летать в режиме выживания
             { question: "Почему читы, такие как X-ray, осуждаются в 1.8.9?", options: ["Они крашат сервер", "Они дают несправедливое преимущество", "Они удаляют миры", "Они замедляют игру"], answer: 1 }, // Они дают несправедливое преимущество
             { question: "Какой чит обходит анти-читы путем изменения пакетов в 1.8.9?", options: ["Packet spoofing", "KillAura", "Speed hack", "Auto-aim"], answer: 0 }, // Packet spoofing
-            { question: "Что делает чит 'Jesus hack' в Minecraft 1.8.9?", options: ["Ходить по воде", "Бесконечная еда", "Автоматическая рыбалка", "Быстрое плавание"], answer: 0 }, // Ходить по воде
+            { question: "Что делает чит 'Jesus hack' в 1.8.9?", options: ["Ходить по воде", "Бесконечная еда", "Автоматическая рыбалка", "Быстрое плавание"], answer: 0 }, // Ходить по воде
             { question: "Какой чит позволяет видеть игроков через стены в 1.8.9?", options: ["X-ray", "ESP", "KillAura", "Auto-aim"], answer: 1 }, // ESP
             { question: "Что делает чит 'Triggerbot' в PvP на 1.8.9?", options: ["Автоматический выстрел из лука", "Автоматическая атака при наведении", "Увеличение урона", "Бесконечные стрелы"], answer: 1 }, // Автоматическая атака при наведении
             { question: "Какой анти-чит отслеживает подозрительные движения в 1.8.9?", options: ["Watchdog", "CreeperGuard", "BlockBuster", "AntiAura"], answer: 0 }, // Watchdog
@@ -216,12 +221,43 @@
             { question: "Сосал? Да/Нет", options: ["Да", "Нет"], answer: 1 } // Нет
         ];
 
-        function register() {
+        // Short test questions (3 complex general IQ + 17 complex Minecraft + 1 "Сосал?")
+        const shortTestQuestions = [
+            // Complex General IQ Questions (3)
+            { question: "Если 3x + 5y = 29 и x + y = 7, чему равно x?", options: ["2", "3", "4", "5"], answer: 2 }, // 4
+            { question: "Какое число отсутствует: 1, 4, 10, 22, ?, 46", options: ["28", "30", "32", "34"], answer: 2 }, // 32
+            { question: "Что следует далее: 1, 4, 10, 22, 46, ?", options: ["82", "94", "100", "106"], answer: 1 }, // 94
+
+            // Complex Minecraft Cheat-Related Questions (17)
+            { question: "Какой чит обходит анти-читы путем изменения пакетов в 1.8.9?", options: ["Packet spoofing", "KillAura", "Speed hack", "Auto-aim"], answer: 0 }, // Packet spoofing
+            { question: "Почему чит 'KillAura' трудно обнаружить в 1.8.9?", options: ["Мимикрирует под легитимную игру", "Работает только в одиночной игре", "Не отправляет пакеты", "Меняет текстуры"], answer: 0 }, // Мимикрирует под легитимную игру
+            { question: "Какой метод обхода NoCheatPlus популярен в 1.8.9?", options: ["Timer manipulation", "Block glitching", "Inventory spoofing", "Chat flooding"], answer: 0 }, // Timer manipulation
+            { question: "Какой анти-чит в 1.8.9 анализирует углы прицеливания?", options: ["NoCheatPlus", "Watchdog", "AAC", "Spartan"], answer: 3 }, // Spartan
+            { question: "Какой метод обхода анти-читов в 1.8.9 использует пакеты?", options: ["Packet cancelling", "Timer spoofing", "Block glitching", "Inventory hacking"], answer: 0 }, // Packet cancelling
+            { question: "Какой анти-чит в 1.8.9 отслеживает скорость размещения блоков?", options: ["NoCheatPlus", "AAC", "Watchdog", "Spartan"], answer: 1 }, // AAC
+            { question: "Какой чит в 1.8.9 позволяет обойти проверку движения?", options: ["Phase", "Speed hack", "KillAura", "Auto-clicker"], answer: 0 }, // Phase
+            { question: "Какой метод обхода в 1.8.9 изменяет таймер клиента?", options: ["Timer hack", "Speed hack", "Phase", "No clip"], answer: 0 }, // Timer hack
+            { question: "Какой анти-чит в 1.8.9 проверяет частоту кликов?", options: ["NoCheatPlus", "AAC", "Watchdog", "Spartan"], answer: 1 }, // AAC
+            { question: "Какой чит в 1.8.9 имитирует легитимные движения?", options: ["SmoothAim", "Aimbot", "KillAura", "Triggerbot"], answer: 0 }, // SmoothAim
+            { question: "Какой метод обхода в 1.8.9 использует поддельные пакеты?", options: ["Spoofer", "Timer hack", "Phase", "No clip"], answer: 0 }, // Spoofer
+            { question: "Какой анти-чит в 1.8.9 проверяет последовательность действий?", options: ["NoCheatPlus", "AAC", "Watchdog", "Spartan"], answer: 0 }, // NoCheatPlus
+            { question: "Что делает чит 'Blink' в 1.8.9?", options: ["Фиктивное отставание", "Невидимость", "Быстрое перемещение", "Автоматическая атака"], answer: 0 }, // Фиктивное отставание
+            { question: "Что делает чит 'Criticals' в 1.8.9?", options: ["Автоматические критические удары", "Увеличение урона", "Бесконечное здоровье", "Быстрая регенерация"], answer: 0 }, // Автоматические критические удары
+            { question: "Что делает чит 'Reach' в 1.8.9?", options: ["Увеличивает дальность удара", "Ускоряет бег", "Дает невидимость", "Автоматически целится"], answer: 0 }, // Увеличивает дальность удара
+            { question: "Что делает чит 'Hitbox' в 1.8.9?", options: ["Увеличивает зону поражения", "Уменьшает урон", "Дает невидимость", "Ускоряет атаку"], answer: 0 }, // Увеличивает зону поражения
+            { question: "Какой метод обхода в 1.8.9 снижает отправку пакетов?", options: ["Packet limiter", "Timer hack", "Phase", "Spoofer"], answer: 0 }, // Packet limiter
+
+            // Special Question (1)
+            { question: "Сосал? Да/Нет", options: ["Да", "Нет"], answer: 1 } // Нет
+        ];
+
+        function register(testType) {
             username = document.getElementById('username').value.trim();
             discordUsername = document.getElementById('discord-username').value.trim();
             if (username && discordUsername) {
                 localStorage.setItem('username', username);
                 localStorage.setItem('discordUsername', discordUsername);
+                isShortTest = testType === 'short';
                 document.getElementById('registration').classList.add('hidden');
                 document.getElementById('test').classList.remove('hidden');
                 showQuestion();
@@ -232,7 +268,8 @@
 
         function showQuestion() {
             const container = document.getElementById('question-container');
-            const question = questions[currentQuestion];
+            const activeQuestions = isShortTest ? shortTestQuestions : questions;
+            const question = activeQuestions[currentQuestion];
             const isSpecialUser = username === 'MwXHvH';
             container.innerHTML = `
                 <div class="question-card">
@@ -242,14 +279,15 @@
                     `).join('')}
                 </div>
             `;
-            document.getElementById('progress').textContent = `Вопрос ${currentQuestion + 1} из ${questions.length}`;
+            document.getElementById('progress').textContent = `Вопрос ${currentQuestion + 1} из ${activeQuestions.length}`;
             const progressFill = document.getElementById('progress-fill');
-            progressFill.style.width = `${(currentQuestion + 1) / questions.length * 100}%`;
+            progressFill.style.width = `${(currentQuestion + 1) / activeQuestions.length * 100}%`;
         }
 
         function selectAnswer(index) {
+            const activeQuestions = isShortTest ? shortTestQuestions : questions;
             userAnswers[currentQuestion] = index;
-            if (index === questions[currentQuestion].answer) {
+            if (index === activeQuestions[currentQuestion].answer) {
                 score += 1; // 1 point per correct answer
             }
             nextQuestion();
@@ -257,7 +295,8 @@
 
         function nextQuestion() {
             currentQuestion++;
-            if (currentQuestion < questions.length) {
+            const activeQuestions = isShortTest ? shortTestQuestions : questions;
+            if (currentQuestion < activeQuestions.length) {
                 showQuestion();
             } else {
                 showResults();
@@ -272,27 +311,40 @@
             const roleTutorial = document.getElementById('role-tutorial');
             username = localStorage.getItem('username') || 'Игрок';
             discordUsername = localStorage.getItem('discordUsername') || 'Неизвестно';
+            const activeQuestions = isShortTest ? shortTestQuestions : questions;
 
             // Scoring System
             let role;
-            if (score >= 60) {
-                role = "Умный";
-            } else if (score >= 50) {
-                role = "Почти дебил";
-            } else if (score >= 40) {
-                role = "Норм";
-            } else if (score >= 30) {
-                role = "Даун";
-            } else if (score >= 20) {
-                role = "Слабоумный";
-            } else if (score >= 10) {
-                role = "Отсталый";
+            if (isShortTest) {
+                if (score >= 18) {
+                    role = "Умный";
+                } else if (score >= 13) {
+                    role = "Мозга есть";
+                } else if (score >= 8) {
+                    role = "Тупой";
+                } else {
+                    role = "Слабоумный";
+                }
             } else {
-                role = "12-летка";
+                if (score >= 60) {
+                    role = "Умный";
+                } else if (score >= 50) {
+                    role = "Почти дебил";
+                } else if (score >= 40) {
+                    role = "Норм";
+                } else if (score >= 30) {
+                    role = "Даун";
+                } else if (score >= 20) {
+                    role = "Слабоумный";
+                } else if (score >= 10) {
+                    role = "Отсталый";
+                } else {
+                    role = "12-летка";
+                }
             }
 
-            // Show role tutorial for scores >= 40
-            if (score >= 40) {
+            // Show role tutorial for scores >= 40 (full test) or >= 13 (short test)
+            if ((isShortTest && score >= 13) || (!isShortTest && score >= 40)) {
                 roleTutorial.classList.remove('hidden');
                 document.getElementById('discord-username-display').textContent = discordUsername;
                 document.getElementById('discord-username-confirm').textContent = discordUsername;
@@ -301,18 +353,18 @@
             }
 
             // Set button action
-            actionButton.textContent = score >= 40 ? "Вернуться к регистрации" : "Пройти тест заново";
+            actionButton.textContent = (isShortTest && score >= 13) || (!isShortTest && score >= 40) ? "Вернуться к регистрации" : "Пройти тест заново";
             actionButton.onclick = restartTest;
 
             // Display result
-            resultText.textContent = `Поздравляем, ${username}! Ваш результат: ${score} из ${questions.length}. Роль: ${role}. Discord-ник: ${discordUsername}.`;
+            resultText.textContent = `Поздравляем, ${username}! Ваш результат: ${score} из ${activeQuestions.length}. Роль: ${role}. Discord-ник: ${discordUsername}.`;
 
             // Send result to Telegram
-            const telegramBotToken = '7590381019:AAGdr6Dge5B-boqR1ko8sUkoP5YpzurUNRs';
+            const TELEGRAM_BOT_TOKEN = '7590381019:AAGdr6Dge5B-boqR1ko8sUkoP5YpzurUNRs';
             const telegramChatId = '8082085782';
-            const message = `Ник в игре: ${username}\nDiscord-ник: ${discordUsername}\nРезультат: ${score} из ${questions.length}\nРоль: ${role}`;
+            const message = `Ник в игре: ${username}\nDiscord-ник: ${discordUsername}\nРезультат: ${score} из ${activeQuestions.length}\nРоль: ${role}`;
             try {
-                const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -334,6 +386,7 @@
             currentQuestion = 0;
             score = 0;
             userAnswers = [];
+            isShortTest = false;
             document.getElementById('results').classList.add('hidden');
             document.getElementById('registration').classList.remove('hidden');
             document.getElementById('username').value = localStorage.getItem('username') || '';
